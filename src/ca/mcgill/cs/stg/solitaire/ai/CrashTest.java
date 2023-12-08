@@ -38,6 +38,7 @@ public final class CrashTest
 	public static void main(String[] pArgs)
 	{
 		GameModel model = new GameModel(new GreedyPlayingStrategy());
+		//@loop_invariant 0 <= i && i <= NUMBER_OF_GAMES;
 		for( int i = 0; i < NUMBER_OF_GAMES; i++ )
 		{
 			playGame(model);
@@ -45,19 +46,32 @@ public final class CrashTest
 		System.out.println("Runs completed.");
 	}
 	
+	//@requires pModel != null;
+    //@ensures pModel.getMovesCount() == 0;
+    //@ensures pModel.isGameOver() == false;
+    //@ensures pModel.isGameWon() == false;
 	private static void playGame(GameModel pModel)
 	{
 		pModel.reset();
 		boolean advanced = true;
+		
+		//@loop_invariant advanced == true || pModel.canUndo() == false;
+        //@loop_modifies pModel;
 		while( advanced )
 		{
 			advanced = pModel.tryToAutoPlay();
 		}
+		
+		//@loop_invariant pModel.canUndo() == true;
+        //@loop_modifies pModel;
 		while( pModel.canUndo() )
 		{
 			pModel.undoLast();
 		}
 		advanced = true;
+		
+		//@loop_invariant advanced == true || pModel.canUndo() == false;
+        //@loop_modifies pModel;
 		while( advanced )
 		{
 			advanced = pModel.tryToAutoPlay();

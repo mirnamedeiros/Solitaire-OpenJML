@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Solitaire
  *  
  *  Copyright (C) 2016 by Martin P. Robillard
@@ -17,11 +17,11 @@
  *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see http://www.gnu.org/licenses/.
- *******************************************************************************/
+ */
 module solitaire {
 	requires javafx.controls;
 	requires transitive javafx.graphics;
-	requires static org.junit.jupiter.api;
+	//requires static org.junit.jupiter.api;
 	exports ca.mcgill.cs.stg.solitaire.gui;
 	exports ca.mcgill.cs.stg.solitaire.cards;
 }
