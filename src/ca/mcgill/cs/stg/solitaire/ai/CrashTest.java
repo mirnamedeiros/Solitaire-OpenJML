@@ -47,23 +47,23 @@ public final class CrashTest
 	}
 	
 	//@ requires pModel != null;
-    //@ ensures pModel.getMovesCount() == 0;
-    //@ ensures pModel.isGameOver() == false;
-    //@ ensures pModel.isGameWon() == false;
+	//@ ensures pModel.getMovesCount() == 0;
+	//@ ensures pModel.isGameOver() == false;
+	//@ ensures pModel.isGameWon() == false;
 	private static void playGame(GameModel pModel)
 	{
 		pModel.reset();
 		boolean advanced = true;
 		
 		//@ loop_invariant advanced == true || pModel.canUndo() == false;
-        //@ loop_modifies pModel;
+		//@ loop_modifies pModel;
 		while( advanced )
 		{
 			advanced = pModel.tryToAutoPlay();
 		}
 		
 		//@ loop_invariant pModel.canUndo() == true;
-        //@ loop_modifies pModel;
+		//@ loop_modifies pModel;
 		while( pModel.canUndo() )
 		{
 			pModel.undoLast();
@@ -71,7 +71,7 @@ public final class CrashTest
 		advanced = true;
 		
 		//@ loop_invariant advanced == true || pModel.canUndo() == false;
-        //@ loop_modifies pModel;
+		//@ loop_modifies pModel;
 		while( advanced )
 		{
 			advanced = pModel.tryToAutoPlay();

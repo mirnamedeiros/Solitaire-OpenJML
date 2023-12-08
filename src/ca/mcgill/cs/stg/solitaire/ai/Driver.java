@@ -41,11 +41,18 @@ public final class Driver
 		int total = 0;
 		int totalWon = 0;
 		GameModel model = new GameModel(new GreedyPlayingStrategy());
+		
+		//@ loop_invariant 0 <= i <= NUMBER_OF_GAMES;
+		//@ loop_invariant 0 <= total && totalWon <= i <= NUMBER_OF_GAMES;
 		for( int i = 0; i < NUMBER_OF_GAMES; i++ )
 		{
 			playGame(model);
 			int score = model.getScore();
 			total += score;
+			
+			//@ assert 0 <= score && score <= ALL_CARDS;
+			//@ assert 0 <= total && total <= ALL_CARDS * NUMBER_OF_GAMES;
+			//@ assert 0 <= totalWon && totalWon <= NUMBER_OF_GAMES;
 			if( score == ALL_CARDS )
 			{
 				totalWon++;
@@ -57,10 +64,15 @@ public final class Driver
 				((double)total)/((double)NUMBER_OF_GAMES)));
 	}
 	
+	//@ requires pModel != null;
+	//@ ensures pModel != null && \fresh(pModel);
 	private static void playGame(GameModel pModel)
 	{
 		pModel.reset();
 		boolean advanced = true;
+		
+		//@ loop_invariant advanced == true;
+		//@ loop_modifies pModel;
 		while( advanced )
 		{
 			advanced = pModel.tryToAutoPlay();
