@@ -38,5 +38,8 @@ public interface PlayingStrategy
 	 * @param pModel A game model to query.
 	 * @return The move computed.
 	 */
+	
+	//@ requires pModel != null;
+	//@ ensures \result != null && \result instanceof Move;
 	Move getLegalMove(GameModelView pModel);
 }
