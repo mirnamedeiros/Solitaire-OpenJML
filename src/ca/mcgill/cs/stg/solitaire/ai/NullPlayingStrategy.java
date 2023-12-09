@@ -32,7 +32,8 @@ public class NullPlayingStrategy implements PlayingStrategy
 	 * Creates a new strategy.
 	 */
 	public NullPlayingStrategy() {}
-	
+
+	//@ pure
 	@Override
 	public Move getLegalMove(GameModelView pModel)
 	{
