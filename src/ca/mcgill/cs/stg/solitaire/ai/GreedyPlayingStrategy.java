@@ -45,8 +45,10 @@ import ca.mcgill.cs.stg.solitaire.model.TableauPile;
  */
 public class GreedyPlayingStrategy implements PlayingStrategy
 {
+	//@ spec_public
 	private static final List<Function<GameModelView, Move>> SUBSTRATEGIES = new ArrayList<>();
 
+	//@ ensures SUBSTRATEGIES.size() == 6;
 	static
 	{
 		SUBSTRATEGIES.add(GreedyPlayingStrategy::substrategyDiscardIfDiscardPileIsEmpty);
@@ -57,6 +59,16 @@ public class GreedyPlayingStrategy implements PlayingStrategy
 		SUBSTRATEGIES.add(GreedyPlayingStrategy::substrategyDiscard);
 	}
 	
+	/*
+	 * Variáveis para auxiliar nas anotações JML 
+	 */
+	/*@spec_public*/ static boolean checkIsEmpty;
+	/*@spec_public*/ static Move nullMove;
+	/*@spec_public*/ static Move cardMove;
+	/*@spec_public*/ static boolean isBottomKing = false;
+	/*@spec_public*/ static boolean isLowestVisibleInTableau = false;
+	/*@spec_public*/ static boolean isLegalMove = false;
+	
 	/**
 	 * Creates a new strategy.
 	 */
@@ -65,6 +77,8 @@ public class GreedyPlayingStrategy implements PlayingStrategy
 	/*
 	 * If the discard pile is empty, discard. 
 	 */
+	//@ requires pModel != null;
+	//@ ensures \result != null;
 	private static Move substrategyDiscardIfDiscardPileIsEmpty(GameModelView pModel)
 	{
 		if( pModel.isDiscardPileEmpty() && !pModel.isDeckEmpty() )
@@ -80,14 +94,24 @@ public class GreedyPlayingStrategy implements PlayingStrategy
 	/*
 	 * If it's possible to move the top of the discard pile to the foundation, do it.
 	 */
+	//@ requires pModel != null;
+	//@ requires !checkIsEmpty;
+	//@ ensures \result != null;
 	private static Move substrategyMoveDiscardToFoundation(GameModelView pModel)
 	{
+		checkIsEmpty = pModel.isDeckEmpty();
+		
 		if( pModel.isDiscardPileEmpty() )
 		{
 			return pModel.getNullMove();
 		}
+		
+		//@ assert FoundationPile.values() != null;
+		//@ loop_invariant pile == FoundationPile.FIRST || pile == FoundationPile.SECOND || pile == FoundationPile.THIRD || pile == FoundationPile.FOURTH;
+		//@ loop_modifies \nothing;
 		for(FoundationPile pile : FoundationPile.values())
 		{
+			
 			if( pModel.isLegalMove(pModel.peekDiscardPile(), pile))
 			{
 				return pModel.getCardMove(pModel.peekDiscardPile(), pile);
@@ -96,12 +120,18 @@ public class GreedyPlayingStrategy implements PlayingStrategy
 		return pModel.getNullMove();
 	}
 	
+	//@ requires pModel != null;
+	//@ ensures \result != null;
 	private static Move substrategyMoveDiscardToTableau(GameModelView pModel)
 	{
 		if( pModel.isDiscardPileEmpty() )
 		{
 			return pModel.getNullMove();
 		}
+		
+		//@ assert TableauPile.values() != null;
+		//@ loop_invariant pile == TableauPile.FIRST || pile == TableauPile.SECOND || pile == TableauPile.THIRD || pile == TableauPile.FOURTH || pile == TableauPile.FIFTH || pile == TableauPile.SIXTH || pile == TableauPile.SEVENTH;
+		//@ loop_modifies \nothing;
 		for(TableauPile pile : TableauPile.values())
 		{
 			if( pModel.isLegalMove(pModel.peekDiscardPile(), pile))
@@ -112,14 +142,21 @@ public class GreedyPlayingStrategy implements PlayingStrategy
 		return pModel.getNullMove();
 	}
 	
+	//@ requires pModel != null;
+	//@ ensures \result != null;
 	private static Move substrategyMoveFromTableauToFoundation(GameModelView pModel)
 	{
+		//@ assert TableauPile.values() != null;
 		for(TableauPile tableauPile : TableauPile.values())
 		{
 			CardStack stack = pModel.getTableauPile(tableauPile);
 			if( !stack.isEmpty() )
 			{
 				Card card = stack.peek();
+				
+				//@ assert FoundationPile.values() != null;
+				//@ loop_invariant foundationPile == FoundationPile.FIRST || foundationPile == FoundationPile.SECOND || foundationPile == FoundationPile.THIRD || foundationPile == FoundationPile.FOURTH;
+				//@ loop_modifies \nothing;
 				for(FoundationPile foundationPile : FoundationPile.values())
 				{
 					if( pModel.isLegalMove(card, foundationPile))
@@ -133,23 +170,43 @@ public class GreedyPlayingStrategy implements PlayingStrategy
 	}
 	
 	/* Only if it reveals a card or empties a pile. We also don't move kings between empty piles */
+	//@ requires pModel != null;
+	/*@ ensures (\result == nullMove) 
+		|| (isBottomKing == false && isLowestVisibleInTableau == true && isLegalMove == true && \result == cardMove)
+		|| (isBottomKing == false && isLowestVisibleInTableau == true && isLegalMove == false && \result == nullMove)
+		|| (isBottomKing == false && isLowestVisibleInTableau == false && isLegalMove == false && \result == nullMove)
+		|| (isBottomKing == true && isLowestVisibleInTableau == false && isLegalMove == false && \result == nullMove);
+	*/ 
+	//@ ensures \result != null;
 	private static Move substrategyMoveWithinTableau(GameModelView pModel)
 	{
+		nullMove = pModel.getNullMove();
+		
+		//@ assert TableauPile.values() != null;
 		for( TableauPile pile : TableauPile.values())
 		{
 			CardStack stack = pModel.getTableauPile(pile);
+			
+			//@ assert stack != null;
 			for( Card card : stack )
 			{
 				if( pModel.isBottomKing(card))
 				{
+					isBottomKing = true;
 					continue;
 				}
+				
 				if( pModel.isLowestVisibleInTableau(card))
 				{
+					isLowestVisibleInTableau = true;
+					
+					//@ assert TableauPile.values() != null;
 					for( TableauPile pile2 : TableauPile.values() )
 					{
 						if( pModel.isLegalMove(card, pile2))
 						{
+							isLegalMove = true;
+							cardMove = pModel.getCardMove(card, pile2);
 							return pModel.getCardMove(card, pile2);
 						}
 					}
@@ -159,6 +216,8 @@ public class GreedyPlayingStrategy implements PlayingStrategy
 		return pModel.getNullMove();
 	}
 	
+	//@ requires pModel != null;
+	//@ ensures \result != null;
 	private static Move substrategyDiscard(GameModelView pModel)
 	{
 		if( pModel.isDeckEmpty() )
@@ -174,6 +233,7 @@ public class GreedyPlayingStrategy implements PlayingStrategy
 	@Override
 	public Move getLegalMove(GameModelView pModel)
 	{
+		//@ loop_invariant (\forall int i; 0 <= i && i < SUBSTRATEGIES.size());
 		for( Function<GameModelView, Move> substrategy : SUBSTRATEGIES )
 		{
 			Move move = substrategy.apply(pModel);
