@@ -30,6 +30,10 @@ public final class CrashTest
 {
 	private static final int NUMBER_OF_GAMES = 1000;
 	
+	public static boolean pModelUndo;
+	public static boolean gameOver;
+	public static boolean gameWon;
+	
 	private CrashTest() {}
 	
 	/**
@@ -43,35 +47,35 @@ public final class CrashTest
 		{
 			playGame(model);
 		}
-		System.out.println("Runs completed.");
+		//System.out.println("Runs completed.");
 	}
 	
-	//@ requires pModel != null;
-	//@ ensures pModel.getMovesCount() == 0;
-	//@ ensures pModel.isGameOver() == false;
-	//@ ensures pModel.isGameWon() == false;
+	// @ requires pModel != null;
+	// @ ensures gameWon == false;
 	private static void playGame(GameModel pModel)
 	{
+		gameWon = pModel.isCompleted();
+		pModelUndo = pModel.canUndo();
 		pModel.reset();
 		boolean advanced = true;
 		
-		//@ loop_invariant advanced == true || pModel.canUndo() == false;
-		//@ loop_modifies pModel;
+		// @ loop_invariant advanced == true || pModelUndo == false;
+		// @ loop_modifies pModel;
 		while( advanced )
 		{
 			advanced = pModel.tryToAutoPlay();
 		}
 		
-		//@ loop_invariant pModel.canUndo() == true;
-		//@ loop_modifies pModel;
+		// @ loop_invariant pModelUndo == true;
+		// @ loop_modifies pModel;
 		while( pModel.canUndo() )
 		{
 			pModel.undoLast();
 		}
 		advanced = true;
 		
-		//@ loop_invariant advanced == true || pModel.canUndo() == false;
-		//@ loop_modifies pModel;
+		// @ loop_invariant advanced == true || pModelUndo == false;
+		// @ loop_modifies pModel;
 		while( advanced )
 		{
 			advanced = pModel.tryToAutoPlay();

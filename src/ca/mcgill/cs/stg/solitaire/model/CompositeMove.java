@@ -29,13 +29,22 @@ import java.util.List;
  */
 public class CompositeMove implements Move
 {
+	//@ spec_public
 	private final List<Move> aMoves = new ArrayList<>();
 	
 	/**
 	 * @param pMoves Any move to be added to this composite
 	 */
+
+	 //@ public normal_behavior
+	 //@ requires pMoves != null;
+	 //@ ensures \forall int i; 0 <= i < pMoves.length; aMoves.contains(pMoves[i]);
 	public CompositeMove( Move ... pMoves)
 	{
+		//@ maintaining 0 <= \count <= pMoves.length;
+		//@ maintaining \forall int k; 0 <= k < \count; aMoves.contains(pMoves[k]);
+		//@ loop_writes aMoves;
+		//@ decreases pMoves.length - \count;
 		for( Move move : pMoves )
 		{
 			aMoves.add(move);

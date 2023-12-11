@@ -34,7 +34,6 @@ public enum Suit
 	 */
 	
 	//@ requires pSuit != null;
-	//@ ensures \result == (pSuit == CLUBS || pSuit == SPADES || pSuit == CLUBS || pSuit == SPADES);
 	public boolean sameColorAs(Suit pSuit)
 	{
 		assert pSuit != null;

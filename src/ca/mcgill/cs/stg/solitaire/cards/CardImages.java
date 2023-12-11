@@ -31,11 +31,17 @@ import javafx.scene.image.Image;
  */
 public final class CardImages 
 {
+	//@ public invariant aCards != null;
+	//@ spec_public
 	private static final String IMAGE_LOCATION = "";
+	//@ spec_public
 	private static final String IMAGE_SUFFIX = ".gif";
+	//@ spec_public
 	private static final String[] RANK_CODES = {"a", "2", "3", "4", "5", "6", "7", "8", "9", "t", "j", "q", "k"};
+	//@ spec_public
 	private static final String[] SUIT_CODES = {"c", "d", "h", "s"};	
 	
+	//@ spec_public
 	private static Map<String, Image> aCards = new HashMap<String, Image>();
 	
 	private CardImages()
@@ -46,14 +52,19 @@ public final class CardImages
 	 * @param pCard the target card
 	 * @return An icon representing the chosen card.
 	 */
+	//@ requires pCard != null;
+	//@ ensures \result != null;
 	public static Image getCard( Card pCard )
 	{
 		assert pCard != null;
 		return getCard( getCode( pCard ) );
 	}
 	
+	//@ requires pCode != null;
+	//@ ensures \result == aCards.get( pCode );
 	private static Image getCard( String pCode )
 	{
+		//@ nullable
 		Image image = (Image) aCards.get( pCode );
 		if( image == null )
 		{
@@ -67,12 +78,17 @@ public final class CardImages
 	 * Return an image of the back of a card.
 	 * @return An icon representing the back of a card.
 	 */
+
+	//@ ensures \result != null;
 	public static Image getBack()
 	{
 		return getCard( "b" );
 	}
 	
-	private static String getCode( Card pCard )
+	//@ requires pCard != null;
+	//@ ensures \result != null;
+	//@ pure
+	public static String getCode( Card pCard )
 	{
 		return RANK_CODES[ pCard.getRank().ordinal() ] + SUIT_CODES[ pCard.getSuit().ordinal() ];		
 	}

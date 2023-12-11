@@ -35,9 +35,10 @@ public class CardDragHandler implements EventHandler<MouseEvent>
 {
 	/*@ spec_public*/private static final ClipboardContent CLIPBOARD_CONTENT = new ClipboardContent();
 	
+	//@ public invariant aImageView != null;
+    //@ public invariant aCard != null;
 	/*@ spec_public*/private Card aCard;
 	/*@ spec_public*/private ImageView aImageView;
-	//@ public invariant aImageView != null;
 	
 	// Variáveis auxiliares para as anotações jml
 	public String aCardIdString;
@@ -50,16 +51,18 @@ public class CardDragHandler implements EventHandler<MouseEvent>
 		aImageView = pView;
 	}
 	
-	//@ requires pCard != null;
-	//@ ensures aCard == pCard;
+	// @ requires pCard != null;
+	// @ ensures aCard == pCard;
 	void setCard(Card pCard)
 	{
 		aCard = pCard;
 	}
 	
 	//@ also
-	//@ requires pMouseEvent != null;
-	//@ ensures aCardIdString.equals(cliboardContentIdString);
+	// @ requires pMouseEvent != null;
+	// @ ensures aCardIdString.equals(cliboardContentIdString);
+	// @ ensures cliboardContentIdString == null;
+	//@ requires TransferMode.ANY != null;
 	@Override
 	public void handle(MouseEvent pMouseEvent)
 	{

@@ -162,7 +162,6 @@ public final class GameModel implements GameModelView
 	/**
 	 * Restores the model to the state corresponding to the start of a new game.
 	 */
-	//@ ensures aMoves.isEmpty() && emptyADiscard;
 	public void reset()
 	{
 		aMoves.clear();

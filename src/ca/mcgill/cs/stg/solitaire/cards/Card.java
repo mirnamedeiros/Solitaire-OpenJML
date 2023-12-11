@@ -20,6 +20,8 @@
  *******************************************************************************/
 package ca.mcgill.cs.stg.solitaire.cards;
 
+import java.util.ArrayList;
+
 /**
  * An immutable description of a playing card. This abstraction
  * is designed to be independent of game logic, so it does
@@ -36,43 +38,54 @@ package ca.mcgill.cs.stg.solitaire.cards;
  */
 public final class Card
 {
+	//@ public invariant CARDS != null;
 	// Indexed by suit, then rank
-	private static final Card[][] CARDS = new Card[Suit.values().length][];
-	
-	// Create the flyweight objects
-	static
-	{
-		for( Suit suit : Suit.values() )
-		{
-			CARDS[suit.ordinal()] = new Card[Rank.values().length];
-			for( Rank rank : Rank.values() )
-			{
-				CARDS[suit.ordinal()][rank.ordinal()] = new Card(rank, suit);
-			}
-		}
-	}
-	
-	private final Rank aRank;
-	private final Suit aSuit;
-	
-	private Card(Rank pRank, Suit pSuit )
-	{
-		aRank = pRank;
-		aSuit = pSuit;
-	}
-	
-	/**
-	 * Get a flyweight Card object.
-	 * 
-	 * @param pRank The rank of the card (from ace to kind)
-	 * @param pSuit The suit of the card (clubs, diamond, spades, hearts)
-	 * @return The card object representing the card with pRank and pSuit
-	 */
-	public static Card get(Rank pRank, Suit pSuit)
-	{
-		assert pRank != null && pSuit != null;
-		return CARDS[pSuit.ordinal()][pRank.ordinal()];
-	}
+	//@ spec_public
+	private static final ArrayList<ArrayList<Card>> CARDS = new ArrayList<>();
+
+    static {
+		//@ ghost int index = 0;
+		//@ maintaining 0 <= \count < Rank.values().length;
+		//@ maintaining \forall int k; 0 <= k < \count; CARDS.get(k) != null && CARDS.get(k).size() == Rank.values().length;
+		//@ loop_writes CARDS;
+		//@ decreases CARDS.size() - \count;	
+        for (Suit suit : Suit.values()) {
+            ArrayList<Card> suitList = new ArrayList<>();
+
+			//@ maintaining 0 <= \count < Rank.values().length;
+			//@ maintaining \forall int k; 0 <= k < \count; CARDS.get(index).get(k) != null;
+			//@ loop_writes CARDS;
+			//@ decreases CARDS.get(index).size() - \count;
+            for (Rank rank : Rank.values()) {
+                suitList.add(new Card(rank, suit));
+            }
+			//@ set index = index + 1;
+            CARDS.add(suitList);
+        }
+    }
+
+	//@ spec_public
+    private final Rank aRank;
+	//@ spec_public
+    private final Suit aSuit;
+
+	//@ requires pRank != null;
+	//@ requires pSuit != null;
+	//@ ensures this.aRank == pRank;
+	//@ ensures this.aSuit == pSuit;
+    private Card(Rank pRank, Suit pSuit) {
+        aRank = pRank;
+        aSuit = pSuit;
+    }
+
+	//@ requires pRank != null;
+	//@ requires pSuit != null;
+	//@ ensures \result != null;
+	//@ pure
+    public static Card get(Rank pRank, Suit pSuit) {
+		//@ show pSuit.ordinal(), pRank.ordinal();
+        return CARDS.get(pSuit.ordinal()).get(pRank.ordinal());
+    }
 	
 	/**
 	 * Get a flyweight card object based on its serialized form.
@@ -82,10 +95,15 @@ public final class Card
 	 *     valid input to this method.
 	 * @return The card object with id string pId
 	 */
-	public static Card get( String pId )
+
+	//@ requires pId != null;
+	//@ requires pId == getIDString();
+	public Card get( String pId )
 	{
 		assert pId != null;
 		int id = Integer.parseInt(pId);
+		//@ assert (id % Rank.values().length) < Rank.values().length;
+		//@ assert (id / Rank.values().length) < Suit.values().length;
 		return get(Rank.values()[id % Rank.values().length],
 				Suit.values()[id / Rank.values().length]);
 	}
@@ -94,6 +112,9 @@ public final class Card
 	 * Obtain the rank of the card.
 	 * @return An object representing the rank of the card.
 	 */
+
+	//@ ensures \result == this.aRank;
+	//@ pure
 	public Rank getRank()
 	{
 		return aRank;
@@ -106,6 +127,10 @@ public final class Card
 	 *     format is not specified except that it is fully compatible
 	 *     with the format expected by Card.get(String).
 	 */
+
+	//@ ensures \result == Integer.toString(getSuit().ordinal() * Rank.values().length + getRank().ordinal());
+	//@ ensures Integer.parseInt(\result) >= 0;
+	//@ pure
 	public String getIDString()
 	{
 		return Integer.toString(getSuit().ordinal() * Rank.values().length + getRank().ordinal());
@@ -115,6 +140,9 @@ public final class Card
 	 * Obtain the suit of the card.
 	 * @return An object representing the suit of the card 
 	 */
+
+	//@ ensures \result == aSuit;
+	//@ pure
 	public Suit getSuit()
 	{
 		return aSuit;
@@ -123,9 +151,12 @@ public final class Card
 	/**
 	 * @see java.lang.Object#toString()
 	 */
+
 	@Override
+	//@ pure
 	public String toString()
 	{
-		return aRank + " of " + aSuit;
+		String result = aRank + " of " + aSuit;
+		return result;
 	}
 }

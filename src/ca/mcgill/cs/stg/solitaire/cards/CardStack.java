@@ -30,11 +30,17 @@ import java.util.List;
  */
 public class CardStack implements Iterable<Card>
 {
+	//@ public invariant aCards != null;
+	//@ spec_public
 	private final List<Card> aCards;
 	
 	/**
 	 * Creates an empty CardStack.
 	 */
+
+	//@ public normal_behavior
+	//@ ensures aCards != null;
+	//@ pure
 	public CardStack()
 	{
 		aCards = new ArrayList<>();
@@ -46,6 +52,7 @@ public class CardStack implements Iterable<Card>
 	 * 
 	 * @param pCards The cards to initialize the stack with.
 	 */
+	
 	public CardStack(Iterable<Card> pCards)
 	{
 		this();
@@ -62,6 +69,10 @@ public class CardStack implements Iterable<Card>
 	 * @pre pCard != null;
 	 * @pre !aCards.contains(pCard)
 	 */
+
+	//@ requires pCard != null;
+	//@ requires !aCards.contains(pCard);
+	//@ ensures aCards.contains(pCard);
 	public void push(Card pCard)
 	{
 		assert pCard != null && !aCards.contains(pCard);
@@ -74,6 +85,11 @@ public class CardStack implements Iterable<Card>
 	 * @return The card on top of the stack.
 	 * @pre !isEmpty()
 	 */
+
+	//@ requires !isEmpty();
+	//@ requires aCards.size() - 1 >= 0;
+	//@ ensures \result == \old(aCards.get(aCards.size()-1));
+	//@ ensures aCards.size() == (\old(aCards.size()) - 1);
 	public Card pop()
 	{
 		assert !isEmpty();
@@ -84,6 +100,10 @@ public class CardStack implements Iterable<Card>
 	 * @return The card at the top of the stack.
 	 * @pre !isEmpty();
 	 */
+
+	//@ requires !isEmpty();
+	//@ requires aCards.size() - 1 >= 0;
+	//@ ensures \result == \old(aCards.get(aCards.size()-1));
 	public Card peek()
 	{
 		assert !isEmpty();
@@ -95,6 +115,10 @@ public class CardStack implements Iterable<Card>
 	 * @return The card at the position indicated by pIndex
 	 * @pre pIndex >= 0 && pIndex < size();
 	 */
+
+	//@ requires pIndex >= 0 && pIndex < size();
+	//@ ensures \result == aCards.get(pIndex);
+	//@ pure
 	public Card peek(int pIndex)
 	{
 		assert pIndex >= 0 && pIndex < size();
@@ -104,6 +128,8 @@ public class CardStack implements Iterable<Card>
 	/**
 	 * @return The number of cards in the stack.
 	 */
+
+	//@ pure
 	public int size()
 	{
 		return aCards.size();
@@ -112,6 +138,8 @@ public class CardStack implements Iterable<Card>
 	/**
 	 * Removes all the cards in the stack.
 	 */
+
+	//@ ensures isEmpty();
 	public void clear()
 	{
 		aCards.clear();
@@ -120,11 +148,15 @@ public class CardStack implements Iterable<Card>
 	/**
 	 * @return True if and only if the stack has no cards in it.
 	 */
+
+	//@ ensures \result == (aCards.size() == 0);
+	//@ pure
 	public boolean isEmpty()
 	{
 		return aCards.size() == 0;
 	}
 
+	
 	@Override
 	public Iterator<Card> iterator()
 	{

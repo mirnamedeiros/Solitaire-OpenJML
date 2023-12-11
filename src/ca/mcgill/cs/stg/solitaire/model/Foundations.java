@@ -21,6 +21,8 @@
 package ca.mcgill.cs.stg.solitaire.model;
 
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import ca.mcgill.cs.stg.solitaire.cards.Card;
@@ -33,6 +35,7 @@ import ca.mcgill.cs.stg.solitaire.cards.Rank;
  */
 class Foundations
 {
+	//@ spec_public
 	private final Map<FoundationPile, CardStack> aPiles = new HashMap<>();
 	
 	/**
@@ -46,21 +49,31 @@ class Foundations
 	/**
 	 * @return The total number of cards in all the foundation piles.
 	 */
+	
+	//@ ghost int total_result = 0;
+	//@ ensures \result == total_result;
 	int getTotalSize()
 	{
 		int total = 0;
+		//@ maintaining 0 <= \count <= aPiles.size();
+		//@ maintaining \forall int i; 0 <= i < \count; total == total_result;
+		//@ loop_writes \nothing;
+		//@ decreases aPiles.values().size() - \count;
 		for( CardStack stack : aPiles.values())
 		{
 			total += stack.size();
+			//@ set total_result = total;
 		}
 		return total;
 	}
 	
-	/**
-	 * Initializes the FoundationPiles object to reset it to four empty piles.
-	 */
 	void initialize()
 	{
+		//@ maintaining 0 <= \count <= FoundationPile.values().length;
+		//@ maintaining \forall int i; 0 <= i < \count; aPiles.get(FoundationPile.values()[i]) != null;
+    	//@ maintaining \forall int i; 0 <= i < \count; aPiles.get(FoundationPile.values()[i]).isEmpty();
+		//@ loop_writes aPiles;
+		//@ decreases FoundationPile.values().length - \count;
 		for( FoundationPile index : FoundationPile.values() )
 		{
 			aPiles.put(index, new CardStack());
@@ -72,6 +85,10 @@ class Foundations
 	 * @return True if the pile at pLocation is empty
 	 * @pre pLocation != null
 	 */
+
+	//@ requires pLocation != null;
+	//@ requires aPiles.containsKey(pLocation);
+	//@ ensures \result == aPiles.get(pLocation).isEmpty();
 	boolean isEmpty(FoundationPile pLocation)
 	{
 		assert pLocation != null;

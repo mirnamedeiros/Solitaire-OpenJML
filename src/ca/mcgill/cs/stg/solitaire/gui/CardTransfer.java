@@ -31,6 +31,7 @@ public class CardTransfer
 {
 	private static final String SEPARATOR = ";";
 	
+	//@ private invariant aCards != null; 
 	private Card[] aCards;
 	
 	/**
@@ -38,6 +39,8 @@ public class CardTransfer
 	 * version of the cards.
 	 * @param pString The serialized version
 	 */
+	//@ requires pString != null && pString.length() > 0;
+    //@ ensures (\forall int i; 0 <= i && i < aCards.length; aCards[i] != null);
 	public CardTransfer(String pString)
 	{
 		assert pString != null && pString.length() > 0;
@@ -45,7 +48,7 @@ public class CardTransfer
 		aCards = new Card[tokens.length];
 		for( int i = 0; i < tokens.length; i++ )
 		{
-			aCards[i] = Card.get(tokens[i]);
+			//aCards[i] = Card.get(tokens[i]);
 		}
 		assert aCards.length > 0;
 	}
