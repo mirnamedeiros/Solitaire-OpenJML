@@ -32,6 +32,9 @@ public enum Suit
 	 * @return True if this suit and pSuit are of the same color.
 	 * @pre pSuit != null;
 	 */
+	
+	//@ requires pSuit != null;
+	//@ ensures \result == (pSuit == CLUBS || pSuit == SPADES || pSuit == CLUBS || pSuit == SPADES);
 	public boolean sameColorAs(Suit pSuit)
 	{
 		assert pSuit != null;
