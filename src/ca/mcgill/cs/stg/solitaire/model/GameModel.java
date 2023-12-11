@@ -43,14 +43,22 @@ import ca.mcgill.cs.stg.solitaire.cards.Suit;
 public final class GameModel implements GameModelView
 {
 	// Variáveis para auxiliar em anotações com verificações em testes não puros
-	public boolean emptyADiscard;
-	public boolean emptyATableau;
-	public boolean emptyAFoundation;
+	public boolean emptyADiscard = false;
+	public boolean emptyATableau = false;
+	public boolean emptyAFoundation = false;
 	public int aFoundationsSize;
 	public boolean aFoundationsPeek;
 	public int aDiscardSize;
 	public Card aDiscardPeek;
-	public boolean aTableauContains;
+	public boolean aTableauContains = false;
+	public int aTableauSize;
+
+	public boolean tableauContainsCard = false;
+	public boolean foundationsContainsCard = false;
+	public boolean discardContainsCard = false;
+	public boolean canMoveFoundation = false;
+	public boolean canMoveTableau = false;
+	public Location findResult;
 	
 	private static final Move NULL_MOVE = new Move()
 	{
@@ -169,6 +177,7 @@ public final class GameModel implements GameModelView
 	/**
 	 * @return True if the game is completed.
 	 */
+	//@ requires Rank.values() != null && Suit.values() != null;
 	//@ ensures \result == (aFoundationsSize == Rank.values().length * Suit.values().length);
 	public boolean isCompleted()
 	{
@@ -284,7 +293,12 @@ public final class GameModel implements GameModelView
 	/*@ requires (pLocation == OtherLocation.DISCARD_PILE)
 		|| (pLocation instanceof FoundationPile)
 		|| (pLocation instanceof TableauPile );
-	*/      
+	*/
+	//@modifies aDiscard, aFoundations, aTableau;
+	/* @ensures !aDiscard.isEmpty() ==> aDiscardSize == \old(aDiscardSize) - 1;
+		@ensures pLocation instanceof TableauPile 
+			==> aTableauSize == \old(aTableauSize) - 1;
+	*/
 	private void absorbCard(Location pLocation)
 	{
 		if( pLocation == OtherLocation.DISCARD_PILE )
@@ -302,12 +316,23 @@ public final class GameModel implements GameModelView
 			assert pLocation instanceof TableauPile;
 			aTableau.pop((TableauPile)pLocation);
 		}
+		
+		aDiscardSize = aDiscard.size();
+		aTableauSize = aTableau.aPilesSize();
 	}
 	
 	//@ requires pCard != null && pDestination != null;
 	/*@ requires (pDestination instanceof TableauPile)
 		|| (pDestination instanceof FoundationPile) 
 		|| (pDestination == OtherLocation.DISCARD_PILE);
+	*/
+	//@ modifies aTableau, aFoundations, aDiscard;
+	/*@ ensures (pDestination instanceof TableauPile) 
+		  	==> aTableauContains && aTableauSize == \old(aTableauSize);
+		@ ensures (pDestination instanceof FoundationPile) 
+	      	==> aFoundationsSize == \old(aFoundationsSize) + 1;
+	   	@ ensures (pDestination == OtherLocation.DISCARD_PILE) 
+	      	==> aDiscardSize == \old(aDiscardSize) + 1;
 	*/
 	private void move(Card pCard, Location pDestination)
 	{
@@ -331,8 +356,14 @@ public final class GameModel implements GameModelView
 			{
 				assert pDestination instanceof TableauPile;
 				aTableau.push(pCard, (TableauPile)pDestination);
+				aTableauSize = aTableau.aPilesSize();
+				aTableauContains = true;
 			}
 		}
+		
+		aDiscardSize = aDiscard.size();
+		aFoundationsSize = aFoundations.getTotalSize();
+	    
 		notifyListeners();
 	}
 	
@@ -370,15 +401,23 @@ public final class GameModel implements GameModelView
 		return aTableau.getSequence(pCard, pPile);
 	}
 
+	
+	/*@ also
+		@ ensures \result ==> (pDestination instanceof FoundationPile && canMoveFoundation)
+		|| (pDestination instanceof TableauPile && canMoveTableau)
+		|| (!\result);
+	*/
 	@Override
 	public boolean isLegalMove(Card pCard, Location pDestination )
 	{ 
 		if( pDestination instanceof FoundationPile )
 		{
+			canMoveFoundation = true;
 			return aFoundations.canMoveTo(pCard, (FoundationPile) pDestination);
 		}
 		else if( pDestination instanceof TableauPile )
 		{
+			canMoveTableau = true;
 			return aTableau.canMoveTo(pCard, (TableauPile) pDestination);
 		}
 		else
@@ -437,6 +476,8 @@ public final class GameModel implements GameModelView
 			aOrigin = find(pCard);
 		}
 
+		//@ also 
+		//@ ensures aMoves.size() == \old(aMoves.size()) + 1;
 		@Override
 		public void perform()
 		{
@@ -466,6 +507,8 @@ public final class GameModel implements GameModelView
 			aIndex = pIndex;
 		}
 		
+		//@ also 
+		//@ ensures aMoves.size() == \old(aMoves.size()) + 1;
 		@Override
 		public void perform()
 		{
@@ -474,6 +517,8 @@ public final class GameModel implements GameModelView
 			notifyListeners();
 		}
 
+		//@ also 
+		//@ ensures aMoves.size() == \old(aMoves.size()) - 1;
 		@Override
 		public void undo()
 		{

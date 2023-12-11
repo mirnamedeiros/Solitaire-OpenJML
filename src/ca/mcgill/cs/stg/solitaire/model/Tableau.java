@@ -347,4 +347,8 @@ class Tableau
 		aPiles.get(pIndex).push(pCard);
 		aVisible.add(pCard);
 	}
+	
+	public int aPilesSize() {
+		return aPiles.size();
+	}
 }
