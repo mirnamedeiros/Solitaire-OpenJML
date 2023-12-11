@@ -41,6 +41,6 @@ public interface Move
 	 * @return True if the move is not a move that
 	 *     advances the game. False by default.
 	 */
-	default boolean isNull()
+	default /*@ pure*/ boolean isNull()
 	{ return false; }
 }

@@ -42,6 +42,16 @@ import ca.mcgill.cs.stg.solitaire.cards.Suit;
  */
 public final class GameModel implements GameModelView
 {
+	// Variáveis para auxiliar em anotações com verificações em testes não puros
+	public boolean emptyADiscard;
+	public boolean emptyATableau;
+	public boolean emptyAFoundation;
+	public int aFoundationsSize;
+	public boolean aFoundationsPeek;
+	public int aDiscardSize;
+	public Card aDiscardPeek;
+	public boolean aTableauContains;
+	
 	private static final Move NULL_MOVE = new Move()
 	{
 		@Override
@@ -78,8 +88,8 @@ public final class GameModel implements GameModelView
 	};
 	
 	private final Deck aDeck = new Deck();
-	private final Stack<Move> aMoves = new Stack<>();
-	private final CardStack aDiscard = new CardStack();
+	/*@ spec_public*/private final Stack<Move> aMoves = new Stack<>();
+	/*@ spec_public*/private final CardStack aDiscard = new CardStack();
 	private final Foundations aFoundations = new Foundations();
 	private final Tableau aTableau = new Tableau();
 	private final List<GameModelListener> aListeners = new ArrayList<>();
@@ -90,6 +100,7 @@ public final class GameModel implements GameModelView
 	 * @param pPlayingStrategy The strategy to use for auto-play. 
 	 * @pre pPlayingStrategy != null
 	 */
+	//@ requires pPlayingStrategy != null;
 	public GameModel(PlayingStrategy pPlayingStrategy)
 	{
 		assert pPlayingStrategy != null;
@@ -100,6 +111,7 @@ public final class GameModel implements GameModelView
 	/**
 	 * @return The number of cards in the foundations.
 	 */
+	//@ ensures \result >= 0;
 	public int getScore()
 	{
 		return aFoundations.getTotalSize();
@@ -122,6 +134,8 @@ public final class GameModel implements GameModelView
 	 * @param pListener A listener to register.
 	 * @pre pListener != null
 	 */
+	
+	//@ requires pListener != null;
 	public void addListener(GameModelListener pListener)
 	{
 		assert pListener != null;
@@ -130,6 +144,7 @@ public final class GameModel implements GameModelView
 	
 	private void notifyListeners()
 	{
+		//@ assert aListeners != null;
 		for( GameModelListener listener : aListeners )
 		{
 			listener.gameStateChanged();
@@ -139,11 +154,13 @@ public final class GameModel implements GameModelView
 	/**
 	 * Restores the model to the state corresponding to the start of a new game.
 	 */
+	//@ ensures aMoves.isEmpty() && emptyADiscard;
 	public void reset()
 	{
 		aMoves.clear();
 		aDeck.shuffle();
 		aDiscard.clear();
+		emptyADiscard = aDiscard.isEmpty();
 		aFoundations.initialize();
 		aTableau.initialize(aDeck);
 		notifyListeners();
@@ -152,8 +169,10 @@ public final class GameModel implements GameModelView
 	/**
 	 * @return True if the game is completed.
 	 */
+	//@ ensures \result == (aFoundationsSize == Rank.values().length * Suit.values().length);
 	public boolean isCompleted()
 	{
+		aFoundationsSize = aFoundations.getTotalSize();
 		return aFoundations.getTotalSize() == Rank.values().length * Suit.values().length;
 	}
 	
@@ -182,8 +201,10 @@ public final class GameModel implements GameModelView
 	 * @return The card on top of the pile.
 	 * @pre pPile != null && !isFoundationPileEmpty(pIndex)
 	 */
+	//@ requires pPile != null && emptyAFoundation;
 	public Card peekSuitStack(FoundationPile pPile)
 	{
+		emptyAFoundation = !isFoundationPileEmpty(pPile);
 		assert pPile != null && !isFoundationPileEmpty(pPile);
 		return aFoundations.peek(pPile);
 	}
@@ -200,23 +221,36 @@ public final class GameModel implements GameModelView
 	 * @return The game location where this card currently is.
 	 * @pre the card is in a location where it can be found and moved.
 	 */
+	//@ requires pCard != null;
+	//@ ensures \result != null;
+	/*@ ensures (\result == OtherLocation.DISCARD_PILE && emptyADiscard && aDiscardPeek == pCard)
+	  	|| (\result != null && \result instanceof FoundationPile && emptyAFoundation && aFoundationsPeek)
+		|| (\result != null && \result instanceof TableauPile && aTableauContains);
+	*/
 	private Location find(Card pCard)
 	{
 		if( !aDiscard.isEmpty() && aDiscard.peek() == pCard )
 		{
+			emptyADiscard = true;
+			aDiscardPeek = aDiscard.peek();
 			return OtherLocation.DISCARD_PILE;
 		}
+		//@ assert FoundationPile.values() != null;
 		for( FoundationPile index : FoundationPile.values() )
 		{
 			if( !aFoundations.isEmpty(index) && aFoundations.peek(index) == pCard )
 			{
+				emptyAFoundation = true;
+				aFoundationsPeek = true;
 				return index;
 			}
 		}
+		//@ assert TableauPile.values() != null;
 		for( TableauPile index : TableauPile.values() )
 		{
 			if( aTableau.contains(pCard, index))
 			{
+				aTableauContains = true;
 				return index;
 			}
 		}
@@ -246,6 +280,11 @@ public final class GameModel implements GameModelView
 	/*
 	 * Removes the moveable card from pLocation.
 	 */
+	//@ requires pLocation != null;
+	/*@ requires (pLocation == OtherLocation.DISCARD_PILE)
+		|| (pLocation instanceof FoundationPile)
+		|| (pLocation instanceof TableauPile );
+	*/      
 	private void absorbCard(Location pLocation)
 	{
 		if( pLocation == OtherLocation.DISCARD_PILE )
@@ -265,6 +304,11 @@ public final class GameModel implements GameModelView
 		}
 	}
 	
+	//@ requires pCard != null && pDestination != null;
+	/*@ requires (pDestination instanceof TableauPile)
+		|| (pDestination instanceof FoundationPile) 
+		|| (pDestination == OtherLocation.DISCARD_PILE);
+	*/
 	private void move(Card pCard, Location pDestination)
 	{
 		Location source = find(pCard);
@@ -318,6 +362,8 @@ public final class GameModel implements GameModelView
 	 * @return A non-empty sequence of cards.
 	 * @pre pCard != null and is in pile pPile
 	 */
+	//@ requires pCard != null && pPile != null;
+	//@ ensures \result != null;
 	public CardStack getSubStack(Card pCard, TableauPile pPile)
 	{
 		assert pCard != null && pPile != null && find(pCard) == pPile;
@@ -383,6 +429,7 @@ public final class GameModel implements GameModelView
 		private Location aOrigin; 
 		private Location aDestination; 
 		
+		//@ requires pCard != null && pDestination != null;
 		CardMove(Card pCard, Location pDestination)
 		{
 			aCard = pCard;
@@ -413,6 +460,7 @@ public final class GameModel implements GameModelView
 	{
 		private final TableauPile aIndex;
 		
+		//@ requires pIndex != null;
 		RevealTopMove(TableauPile pIndex)
 		{
 			aIndex = pIndex;

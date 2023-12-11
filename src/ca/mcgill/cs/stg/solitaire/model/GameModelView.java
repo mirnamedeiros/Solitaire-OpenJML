@@ -28,6 +28,7 @@ import ca.mcgill.cs.stg.solitaire.cards.CardStack;
  */
 public interface GameModelView
 {
+	
 	/**
 	 * @return True if the discard pile has no card in it.
 	 */
@@ -42,6 +43,7 @@ public interface GameModelView
 	 * @param pIndex The suit stack to check
 	 * @return True if the suit stack for pSuit is empty
 	 */
+	//@ requires pIndex != null;
 	boolean isFoundationPileEmpty(FoundationPile pIndex);
 	
 	/**
@@ -54,6 +56,7 @@ public interface GameModelView
 	 * @param pIndex The position of the stack to return.
 	 * @return A copy of the stack at position pIndex
 	 */
+	//@ requires pIndex != null;
 	CardStack getTableauPile(TableauPile pIndex);
 	
 	/**
@@ -61,6 +64,7 @@ public interface GameModelView
 	 * @return True if the card's value is visible in
 	 *     the tableau;
 	 */
+	//@ requires pCard != null;
 	boolean isVisibleInTableau(Card pCard);
 	
 	/**
@@ -69,6 +73,7 @@ public interface GameModelView
 	 *     the lowest card visible in its pile, including 
 	 *     the case where it's the only card in the pile.
 	 */
+	//@ requires pCard != null;
 	boolean isLowestVisibleInTableau(Card pCard);
 	
 	/**
@@ -76,6 +81,7 @@ public interface GameModelView
 	 * @return True if pCard is a visible king located at the bottom of the pile.
 	 * @pre pCard != null && contains(pCard);
 	 */
+	//@ requires pCard != null;
 	boolean isBottomKing(Card pCard);
 	
 	/**
@@ -86,6 +92,7 @@ public interface GameModelView
 	 * @param pDestination The destination of the move.
 	 * @return True if the move is a legal move.
 	 */
+	//@ requires pCard != null && pDestination != null;
 	boolean isLegalMove(Card pCard, Location pDestination );
 	
 	/**
@@ -108,5 +115,6 @@ public interface GameModelView
 	 * @param pDestination The required destination of the card.
  	 * @return An instance of the Move interface
 	 */
+	//@ requires pCard != null && pDestination != null; 
 	Move getCardMove(Card pCard, Location pDestination);
 }
